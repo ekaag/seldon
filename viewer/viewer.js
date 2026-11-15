@@ -90,7 +90,7 @@
     return { nodes, edges, matchingCount: matching.length, edgeCount: matchingEdges.length,
       width: Math.max(600, columns * 280 + 20), height: Math.max(240, Math.ceil(nodes.length / columns) * 180 + 60) };
   }
-  function mount(document) {
+  function mount(document, initialJson = root.seldonOntologyJson) {
     const get = id => document.getElementById(id);
     let model = null, selected = null, generation = 0, focusId = null;
     function element(tag, text, className) { const node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; }
@@ -233,6 +233,10 @@
       } catch (error) { if (current === generation) { get('message').className = 'error'; get('message').textContent = `Could not load file: ${error.message}${model ? ' The previous ontology is still displayed.' : ''}`; } }
       finally { if (current === generation) event.target.value = ''; }
     });
+    if (typeof initialJson === 'string') {
+      try { loadText(initialJson, 'ontology.json (bundled export)'); }
+      catch (error) { get('message').className = 'error'; get('message').textContent = `Could not load bundled ontology: ${error.message} Choose Load ontology.json to select a file.`; }
+    }
     return { loadText };
   }
   const api = { validateExport, parseExport, buildGraph, mount, MAX_BYTES };

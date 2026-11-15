@@ -29,6 +29,11 @@ internal static class ExportFiles
             {
                 await using (var output = new FileStream(ontologyTemp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 8192, true))
                     await serializer.WriteAsync(ontology, output, ct);
+                var dataTemp = Path.Combine(directory, ".data-" + token + ".tmp");
+                viewerTemps.Add("ontology-data.js", dataTemp);
+                var json = await File.ReadAllTextAsync(ontologyTemp, ct);
+                // Encode JSON as a string literal, not executable source from the API specification.
+                await File.WriteAllTextAsync(dataTemp, "globalThis.seldonOntologyJson = " + JsonSerializer.Serialize(json) + ";\n", ct);
                 foreach (var name in new[] { "index.html", "viewer.js", "viewer.css" })
                 {
                     var temporary = Path.Combine(directory, ".viewer-" + token + "-" + name + ".tmp");

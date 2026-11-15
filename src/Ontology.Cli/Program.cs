@@ -30,7 +30,7 @@ try
         var input = Path.GetFullPath(arguments.Input);
         var output = Path.GetFullPath(arguments.Output!);
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (new[] { "ontology.json", "diagnostics.json", "index.html", "viewer.js", "viewer.css" }.Any(name => string.Equals(input, Path.Combine(output, name), comparison)))
+        if (new[] { "ontology.json", "diagnostics.json", "index.html", "viewer.js", "viewer.css", "ontology-data.js" }.Any(name => string.Equals(input, Path.Combine(output, name), comparison)))
         {
             Console.Error.WriteLine("The input specification cannot be an export destination.");
             return 2;
@@ -45,7 +45,7 @@ try
             return 1;
         }
         Console.WriteLine($"Exported {Path.Combine(output, "ontology.json")}");
-        Console.WriteLine($"Viewer: {Path.Combine(output, "index.html")} (choose Load ontology.json)");
+        Console.WriteLine($"Viewer: {Path.Combine(output, "index.html")} (graph loads automatically)");
         Console.WriteLine($"Entities: {built.Ontology.Entities.Count}; relationships: {built.Ontology.Relationships.Count}; actions: {built.Ontology.Actions.Count}");
         if (arguments.OpenBrowser) ChromeViewerLauncher.Open(Path.Combine(output, "index.html"));
         return 0;

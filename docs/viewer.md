@@ -7,17 +7,22 @@
    ```
 
 2. Open `out/actions/index.html` in a modern browser (double-click the file in Explorer).
-3. Choose **Load ontology.json**, then select `out/actions/ontology.json`.
+3. The graph loads automatically from the bundled export. To replace it, choose
+   **Load ontology.json**, then select another exported JSON file.
 4. Search or select an entity in the list or graph. Inspect properties, nested values, enum values,
    provenance, and associated actions. Expand an action for parameters,
    request/response schemas, security declarations, and association evidence.
 
-The three viewer files must stay together. You can also use `viewer/index.html`
+The viewer assets and generated `ontology-data.js` must stay together for automatic
+loading. The data script stores a JSON string encoded by .NET's JSON serializer;
+the viewer parses and validates it rather than executing source text from the API.
+It is a snapshot of `ontology.json` at export time. Rebuild or use the picker after
+editing JSON manually. You can also use `viewer/index.html`
 from the repository to inspect any export. No backend, CDN, internet connection,
 package installation, or static server is required. The picker reads the selected
 file locally; it does not upload it. The viewer makes no network requests and uses
 classic scripts so file URLs do not require module loading or `fetch` permissions.
-The CLI bundles all three viewer assets alongside both JSON files on successful builds.
+The CLI bundles the viewer assets and generated data script alongside both JSON files.
 
 Only Seldon JSON version `1.0` is accepted. Malformed structures, duplicate catalog
 IDs, dangling entity/action/relationship references, and oversized input show clear

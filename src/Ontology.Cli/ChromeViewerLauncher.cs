@@ -25,7 +25,7 @@ internal static class ChromeViewerLauncher
             start.ArgumentList.Add(url);
             using var process = Process.Start(start);
             if (process is null) throw new InvalidOperationException("Chrome did not start.");
-            Console.WriteLine("Opened ontology explorer in Chrome. Choose Load ontology.json to select the export.");
+            Console.WriteLine("Opened ontology explorer in Chrome. The graph loads automatically; click a node for properties and actions.");
         }
         catch (Exception exception) when (exception is Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
         {

@@ -67,6 +67,11 @@ public sealed class CliBuildTests : IDisposable
         Assert.Equal(JsonValueKind.Array, diagnostics.RootElement.ValueKind);
         Assert.All(diagnostics.RootElement.EnumerateArray(), d => Assert.NotEqual("Error", d.GetProperty("severity").GetString()));
         Assert.Empty(Directory.GetFiles(directory, "*.tmp"));
+        var bundled = await File.ReadAllTextAsync(Path.Combine(directory, "ontology-data.js"));
+        const string prefix = "globalThis.seldonOntologyJson = ";
+        Assert.StartsWith(prefix, bundled);
+        var bundledJson = JsonSerializer.Deserialize<string>(bundled[prefix.Length..].Trim().TrimEnd(';'));
+        Assert.Equal(await File.ReadAllTextAsync(Path.Combine(directory, "ontology.json")), bundledJson);
         foreach (var asset in new[] { "index.html", "viewer.js", "viewer.css" })
             Assert.Equal(await File.ReadAllBytesAsync(Path.Combine(Root, "viewer", asset)),
                 await File.ReadAllBytesAsync(Path.Combine(directory, asset)));

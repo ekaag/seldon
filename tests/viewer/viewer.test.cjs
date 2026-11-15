@@ -195,3 +195,18 @@ test('airline CLI export renders a navigable graph, actions, candidates and unbo
   assert.match(document.getElementById('details').textContent, /listPassengerBookings/);
   assert.match(document.getElementById('unbound-actions').textContent, /getHealth/);
 });
+test('bundled ontology automatically displays graph and clickable entity details on page load', () => {
+  const document = dom(); mount(document, JSON.stringify(graphFixture()));
+  assert.equal(document.getElementById('entity-count').textContent, '4');
+  assert.equal(document.getElementById('graph').querySelectorAll('svg').length, 1);
+  const node = document.getElementById('graph').querySelectorAll('g').find(g => g.dataset.entityId === 'entity:A');
+  node.events.click();
+  assert.match(document.getElementById('details').textContent, /uuid/);
+  assert.match(document.getElementById('details').textContent, /GET \/alpha/);
+});
+test('invalid bundled data reports an error and allows a replacement file', () => {
+  const document = dom(); const viewer = mount(document, '{');
+  assert.match(document.getElementById('message').textContent, /Could not load bundled ontology/);
+  viewer.loadText(JSON.stringify(fixture()), 'replacement.json');
+  assert.equal(document.getElementById('entity-count').textContent, '2');
+});

@@ -16,13 +16,14 @@ dotnet run --project src/Ontology.Cli -- build --input "C:\path\to\your-api.yaml
 ```
 
 The command writes `ontology.json`, `diagnostics.json`, `index.html`, `viewer.js`,
-and `viewer.css`. The ontology contains
+`viewer.css`, and `ontology-data.js` (a safely encoded copy for automatic local loading). The ontology contains
 entities, properties, relationships, and associated/unbound actions. Inspect the
-JSON in your editor, or open the output folder's `index.html` and choose **Load ontology.json**.
+JSON in your editor, or open the output folder's `index.html` to see the connected graph immediately.
 See [viewer instructions](docs/viewer.md). No server is required.
 
 After a successful build, the CLI opens the exported `index.html` in Google Chrome.
-Choose **Load ontology.json** to select the JSON beside it. If Chrome is unavailable,
+Click an entity node for properties and actions, or an edge for relationship evidence.
+The file picker lets you load a different ontology. If Chrome is unavailable,
 the CLI prints a warning and retains the successful export. Use `--no-open` for
 automated/headless runs:
 
@@ -56,7 +57,7 @@ A failed build retains any previous `ontology.json`; check the exit code and cur
 diagnostics before using an existing output. Invalid arguments/input-output collisions
 are rejected before exporting. Output I/O failures are reported on stderr.
 
-All five files are staged under unique temporary filenames in the destination directory
+All six files are staged under unique temporary filenames in the destination directory
 and renamed only after generation succeeds. Each rename replaces one complete file;
 the bundle is not a single transaction, so interruption or an I/O error between renames
 can leave outputs from different runs. Temporary files are cleaned on normal failures
@@ -92,8 +93,7 @@ Expected result: **3 entities, 4 relationships, 3 actions**, with warnings but n
 errors. The types are Booking, Flight, and Passenger. A reference to an existing
 named type reuses that entity rather than creating an inline duplicate.
 
-Open `out/airline/index.html` in your browser. Click **Load ontology.json** and
-select `out/airline/ontology.json`. Then:
+Open `out/airline/index.html` in your browser. Its graph loads automatically. Then:
 
 1. Select **Booking**. Inspect required properties and expand `createBooking`.
 2. Select the **flight · one** edge. Its evidence is `ExplicitSchemaRef`.
@@ -104,7 +104,8 @@ select `out/airline/ontology.json`. Then:
 
 The viewer works locally and never calls the API. These are schema types, not actual
 passenger/booking records. You can move the entire output folder to another machine;
-keep all five files together and use the file picker after opening the page.
+keep all six files together. Automatic loading uses the export-time snapshot;
+after editing `ontology.json` manually, use the file picker or rebuild to refresh it.
 
 [Demo results, expected warnings, verification status, and remaining limits](docs/demo-results.md)
 document the final Slice 1.11 checks. **Automated verification is complete; real-browser

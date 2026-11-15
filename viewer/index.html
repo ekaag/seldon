@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; object-src 'none'; base-uri 'none'">
   <title>Seldon · Ontology explorer</title>
   <link rel="stylesheet" href="viewer.css">
+  <script src="ontology-data.js" defer></script>
   <script src="viewer.js" defer></script>
 </head>
 <body>
@@ -17,6 +18,7 @@
     <section class="intro" aria-labelledby="ontology-name"><p class="eyebrow">SCHEMA EXPLORER / RELATIONSHIPS</p><h1 id="ontology-name">Explore your API’s vocabulary.</h1><p id="ontology-description">Load an exported ontology to inspect its entities, properties, and capabilities.</p></section>
     <div id="message" role="status" aria-live="polite">Choose ontology.json to begin. Your file stays in this browser.</div>
     <section class="metrics" aria-label="Ontology counts"><div><strong id="entity-count">—</strong><span>Entities</span></div><div><strong id="relationship-count">—</strong><span>Relationships</span></div><div><strong id="action-count">—</strong><span>Actions</span></div></section>
+    <div class="explorer-layout">
     <section class="graph-panel" aria-labelledby="graph-heading">
       <div class="graph-toolbar"><div><h2 id="graph-heading">Entity relationships</h2><p id="graph-status" class="muted" role="status">Load an ontology to draw its graph.</p></div><div class="graph-controls"><button id="focus-entity" type="button" disabled>Focus selected + neighbors</button><button id="reset-graph" type="button" disabled>Show all</button></div></div>
       <p class="legend"><span class="structural-key">Solid: explicit schema evidence</span><span class="candidate-key">Dashed amber: unverified / candidate</span> Arrows follow source → target. Neighbor focus does not create inverse relationships.</p>
@@ -25,6 +27,7 @@
     <div class="workspace">
       <aside class="catalog" aria-labelledby="catalog-heading"><div class="panel-head"><h2 id="catalog-heading">Entities</h2><span id="filter-count" class="muted">0 shown</span></div><label for="entity-search" class="search-label">Search entities</label><input id="entity-search" type="search" placeholder="Name or schema ID…" disabled><nav id="entity-list" aria-label="Entities"><p class="empty">No ontology loaded.</p></nav></aside>
       <section id="details" class="details" aria-label="Entity details"><div class="welcome"><span class="eyebrow">A CATALOG OF TYPES, NOT LIVE RECORDS</span><h2>Start with an entity.</h2><p>Properties describe its shape. Associated actions describe the API capabilities connected to it.</p><p class="muted">Supports Seldon ontology JSON 1.0. Select a graph node or edge to inspect its evidence.</p></div></section>
+    </div>
     </div>
     <section class="unbound-panel" aria-labelledby="unbound-heading"><h2 id="unbound-heading">Unbound actions</h2><p class="muted">Operations without an entity association remain available for inspection.</p><div id="unbound-actions"><p class="empty">No ontology loaded.</p></div></section>
   </main>
