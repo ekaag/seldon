@@ -19446,7 +19446,7 @@
                         "description": "Successful token request with scopes for both a bot user and a user token",
                         "examples": {
                             "application/json": {
-                                "access_token": "REDACTED_SLACK_TOKEN",
+                                "access_token": "xoxb",
                                 "app_id": "A0KRD7HC3",
                                 "authed_user": {
                                     "access_token": "REDACTED_SLACK_TOKEN",
