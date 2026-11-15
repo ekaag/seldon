@@ -1,0 +1,20 @@
+{
+  "swagger": "2.0",
+  "info": { "title": "Minimal Catalog", "version": "1.0" },
+  "paths": {
+    "/items": {
+      "get": {
+        "operationId": "listItems",
+        "responses": {
+          "200": {
+            "description": "Items",
+            "schema": { "type": "array", "items": { "$ref": "#/definitions/Item" } }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Item": { "type": "object", "properties": { "id": { "type": "string" } } }
+  }
+}
