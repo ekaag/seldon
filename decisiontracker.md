@@ -2,7 +2,7 @@
 
 This log records key product, architecture, implementation, and process decisions across iterations. The build specification remains [seldon-build.md](seldon-build.md); implementation status lives in [progress-tracking.md](progress-tracking.md).
 
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 
 ## Decision index
 
@@ -13,8 +13,18 @@ Last updated: 2026-11-13
 | D-003 | 2026-11-13 | Use C#/.NET with inward dependencies and replaceable adapters | Accepted | Specification sections 2, 5, and 6 |
 | D-004 | 2026-11-13 | Validate model proposals and verify consequential action outcomes | Accepted | Specification sections 2, 10, and 12 |
 | D-005 | 2026-11-13 | Maintain persistent progress and decision logs | Accepted | User instruction, 2026-11-13 |
+| D-006 | 2026-11-14 | Preserve known nonstandard Swagger schema forms with explicit compatibility warnings | Accepted | Slack import failure and implementation judgment |
 
 ## Decisions
+
+### D-006 — Narrow compatibility for legacy Swagger schemas
+
+- **Date/status:** 2026-11-14, Accepted.
+- **Context:** The Slack Swagger 2.0 sample includes recognized scalar type-name lists and object schema lists under `items`, which Microsoft's parser rejects. Our extraction pipeline uses original source JSON, independently of the typed parser model.
+- **Decision:** Downgrade only the exact corresponding parser shape errors at cataloged Swagger schema positions to explicit compatibility warnings. Preserve original definitions, catalog list branches for provenance, and warn that ambiguous item-list extraction is partial. Keep all other parser errors fatal.
+- **Reason:** Allow useful inspection/export of real-world legacy files without rewriting user input, dropping source evidence, or pretending ambiguous schemas are fully understood.
+- **Alternatives:** Rewriting `items` lists into `oneOf` guesses intent; globally ignoring parser errors hides malformed documents. Both are rejected.
+- **Consequences:** Nullable scalar type lists can be extracted; item lists are not treated as unions or object entities by assumption. A successful export can contain incomplete metadata and warnings. This does not expand Swagger 2.0's conformance rules.
 
 ### D-001 — Incremental delivery and scope approval
 

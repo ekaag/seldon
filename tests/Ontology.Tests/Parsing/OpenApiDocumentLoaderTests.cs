@@ -68,6 +68,40 @@ public sealed class OpenApiDocumentLoaderTests
     }
 
     [Fact]
+    public async Task NonstandardSwaggerSchemaListsLoadWithWarningsAndOriginalProvenance()
+    {
+        var result = await LoadText("""
+            {"swagger":"2.0","info":{"title":"Legacy schemas","version":"1"},"paths":{},
+             "definitions":{"User":{"type":"object","properties":{
+                "label":{"type":["null","string"]},
+                "variant":{"items":[{"type":"object","properties":{"label":{"type":["string","null"]}}},{"type":"null"}]}
+             }}}}
+            """);
+        Assert.False(result.HasErrors, string.Join("; ", result.Diagnostics.Select(d => d.Message)));
+        Assert.NotNull(result.Document);
+        Assert.Contains(result.Diagnostics, d => d.Code == "swagger-schema-compatibility" && d.Provenance!.SourcePointer == "#/definitions/User/properties/label/type");
+        Assert.Contains(result.Document.Schemas, s => s.Provenance.SourcePointer == "/definitions/User/properties/variant/items/0/properties/label");
+        Assert.Equal(2, result.Document.Root.GetProperty("definitions").GetProperty("User").GetProperty("properties").GetProperty("variant").GetProperty("items").GetArrayLength());
+        var extraction = new Ontology.Builder.EntityExtractor().Extract(result.Document, default);
+        var user = Assert.Single(extraction.Entities);
+        Assert.Equal("string", user.Properties.Single(p => p.Name == "label").DataType);
+        Assert.True(user.Properties.Single(p => p.Name == "label").Nullable);
+        Assert.Equal("unknown", user.Properties.Single(p => p.Name == "variant").DataType);
+        Assert.Contains(extraction.Diagnostics, d => d.Code == "unsupported-items-list");
+    }
+
+    [Theory]
+    [InlineData("{\"type\":[\"string\",42]}")]
+    [InlineData("{\"items\":[42]}")]
+    [InlineData("{\"items\":42}")]
+    public async Task InvalidSwaggerSchemaShapesRemainFatal(string schema)
+    {
+        var result = await LoadText("{\"swagger\":\"2.0\",\"info\":{\"title\":\"Invalid\",\"version\":\"1\"},\"paths\":{},\"definitions\":{\"Bad\":" + schema + "}}");
+        Assert.True(result.HasErrors);
+        Assert.Contains(result.Diagnostics, d => d.Code == "openapi-parser-error");
+    }
+
+    [Fact]
     public async Task InlineRequestSchemasNullableTypesAndRecursiveReferencesAreRetained()
     {
         var result = await loader.LoadAsync(Sample("minimal-openapi31.yaml"), default);

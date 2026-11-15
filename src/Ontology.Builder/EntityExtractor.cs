@@ -105,6 +105,9 @@ public sealed class EntityExtractor : IEntityExtractor
         private void UnionWarnings(JsonElement node, string pointer)
         {
             if (node.ValueKind != JsonValueKind.Object) return;
+            if (node.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
+                Warn("unsupported-items-list", pointer + "/items",
+                    "A list of item schemas is preserved but not interpreted as a union or a single item type; extraction may be partial.");
             foreach (var keyword in new[] { "oneOf", "anyOf" })
                 if (node.TryGetProperty(keyword, out _)) Warn("unsupported-" + keyword, pointer + "/" + keyword,
                     $"{keyword} alternatives are not merged; the property's type may be unknown.");

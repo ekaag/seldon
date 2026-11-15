@@ -42,17 +42,42 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
             settings.AddYamlReader();
             var format = Path.GetExtension(inputPath).Equals(".json", StringComparison.OrdinalIgnoreCase) ? "json" : "yaml";
             var parsed = await OpenApiDocument.LoadAsync(input, format, settings, ct);
-            if (parsed.Diagnostic is { } diagnostic)
+            void ParserDiagnostics(IReadOnlyDictionary<string, ApiSchema>? catalog = null)
             {
+                if (parsed.Diagnostic is not { } diagnostic) return;
                 foreach (var error in diagnostic.Errors)
-                    Report("openapi-parser-error", DiagnosticSeverity.Error, error.Message, error.Pointer ?? "");
+                {
+                    var pointer = error.Pointer ?? "";
+                    var compatibility = false;
+                    if (parsed.Diagnostic.SpecificationVersion == OpenApiSpecVersion.OpenApi2_0 && catalog is not null)
+                    {
+                        var sourcePointer = pointer.StartsWith('#') ? pointer[1..] : pointer;
+                        var slash = sourcePointer.LastIndexOf('/');
+                        if (slash >= 0 && catalog.TryGetValue(sourcePointer[..slash], out var schema) && schema.Definition.ValueKind == JsonValueKind.Object)
+                        {
+                            var keyword = sourcePointer[(slash + 1)..];
+                            if (schema.Definition.TryGetProperty(keyword, out var value) && value.ValueKind == JsonValueKind.Array && value.GetArrayLength() > 0)
+                                compatibility = keyword == "type" && error.Message == "Expected scalar value." &&
+                                    value.EnumerateArray().All(x => x.ValueKind == JsonValueKind.String && x.GetString() is "null" or "string" or "number" or "integer" or "boolean" or "array" or "object") ||
+                                    keyword == "items" && error.Message == "schema must be a map/object" &&
+                                    value.EnumerateArray().All(x => x.ValueKind == JsonValueKind.Object);
+                        }
+                    }
+                    if (compatibility)
+                        Report("swagger-schema-compatibility", DiagnosticSeverity.Warning,
+                            "Nonstandard Swagger 2.0 schema preserved from source: " + error.Message +
+                            ". Extraction may be partial; schema lists under items are not assumed to be unions.", pointer);
+                    else
+                        Report("openapi-parser-error", DiagnosticSeverity.Error, error.Message, error.Pointer ?? "");
+                }
                 foreach (var warning in diagnostic.Warnings)
                     Report("openapi-parser-warning", DiagnosticSeverity.Warning, warning.Message, warning.Pointer ?? "");
             }
-            if (parsed.Document is null) return new(null, diagnostics);
+            if (parsed.Document is null) { ParserDiagnostics(); return new(null, diagnostics); }
             var version = parsed.Diagnostic?.SpecificationVersion;
             if (version is not (OpenApiSpecVersion.OpenApi2_0 or OpenApiSpecVersion.OpenApi3_0 or OpenApiSpecVersion.OpenApi3_1))
             {
+                ParserDiagnostics();
                 Report("unsupported-version", DiagnosticSeverity.Error, $"Unsupported specification version '{version}'. Expected Swagger 2.0 or OpenAPI 3.0/3.1.");
                 return new(null, diagnostics);
             }
@@ -93,8 +118,14 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                     if (node.TryGetProperty(field, out var map) && map.ValueKind == JsonValueKind.Object)
                         foreach (var entry in map.EnumerateObject()) Schema(entry.Value, pointer + "/" + field + "/" + Escape(entry.Name));
                 foreach (var field in new[] { "items", "additionalProperties", "not", "contains", "if", "then", "else", "propertyNames", "unevaluatedProperties" })
-                    if (node.TryGetProperty(field, out var child) && child.ValueKind is JsonValueKind.Object or JsonValueKind.True or JsonValueKind.False)
-                        Schema(child, pointer + "/" + field);
+                    if (node.TryGetProperty(field, out var child))
+                    {
+                        if (child.ValueKind is JsonValueKind.Object or JsonValueKind.True or JsonValueKind.False)
+                            Schema(child, pointer + "/" + field);
+                        else if (field == "items" && child.ValueKind == JsonValueKind.Array)
+                            foreach (var (entry, index) in child.EnumerateArray().Select((value, index) => (value, index)))
+                                Schema(entry, pointer + "/items/" + index);
+                    }
                 foreach (var field in new[] { "allOf", "oneOf", "anyOf", "prefixItems" })
                     if (node.TryGetProperty(field, out var array) && array.ValueKind == JsonValueKind.Array)
                         foreach (var (child, index) in array.EnumerateArray().Select((value, index) => (value, index)))
@@ -105,6 +136,7 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                 foreach (var entry in named.EnumerateObject()) Schema(entry.Value, schemaRoot + "/" + Escape(entry.Name), entry.Name);
             foreach (var (pointer, node) in nodes)
                 if (pointer.EndsWith("/schema", StringComparison.Ordinal)) Schema(node, pointer);
+            ParserDiagnostics(schemas);
             var operations = new List<ApiOperation>();
             void PathItem(JsonElement item, string route, string pointer, int depth)
             {

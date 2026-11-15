@@ -2,11 +2,11 @@
 
 Source of scope and acceptance criteria: [seldon-build.md](seldon-build.md).
 
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 
 ## Current state
 
-The build specification has been reviewed and the product understanding summarized. Progress and decision tracking are established. No application code, solution, tests, or runnable demo has been implemented yet.
+The repository now contains the Ontology.Core, Builder, Infrastructure, and CLI projects, tests, and an exported graph viewer. The original increment table below has not yet been reconciled with this later implementation; it is a planning baseline, not current completion evidence. The latest verified work is recorded in the iteration history.
 
 **Next implementation scope:** Increment 1 only, as required by specification section 14. Later increments require explicit approval before work starts.
 
@@ -48,6 +48,15 @@ Reference: specification sections 7, 9 (Increment 1), 12, and 14 (First task).
 - [ ] Report completion and stop before Increment 2 pending explicit approval.
 
 ## Iteration history
+
+### 2026-11-14 — Slack Swagger compatibility fix
+
+- Investigated `out/error.txt`: Swagger 2.0 parser rejects type arrays and schema arrays under `items` in the supplied Slack specification.
+- Added narrow warning-based compatibility for those recognized forms at cataloged schema locations. Preserved original schema JSON, provenance, and the existing user edit to the sample. Unsupported item lists remain explicitly partial; no union meaning is invented. Decision: D-006.
+- Added loader regression cases covering source preservation, nested branch cataloging, nullable type extraction, ambiguous item-list warnings, and malformed forms remaining fatal.
+- Final `dotnet test tests/Ontology.Tests --no-restore`: 128 passed, 0 failed, including nullable extraction and ambiguous item-list assertions. `git diff --check` found no whitespace errors.
+- `dotnet run --no-build --project src/Ontology.Cli -- build --input samples/slack_web_openapi_v2.json --output out/slack-verified --no-open`: exit 0; 193 entities, 47 relationships, 174 actions. Output contains warnings about unsupported/partial semantics; successful export does not imply full Swagger conformance or exhaustive ontology extraction.
+- Generated separate verification output rather than replacing `out/myapi`. Diagnostics contain 257 warnings and no errors. Updated `docs/api-inspection.md` with behavior and limitations.
 
 ### 2026-11-13 — Planning baseline and tracking setup
 

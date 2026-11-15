@@ -43,3 +43,19 @@ source reference catalog correctly resolves their escaped JSON Pointers.
 
 This slice inspects syntax only. Ontology inference and the `build --output` command
 remain for Slices 1.5–1.8; inspection does not write `ontology.json`.
+
+## Legacy Swagger schema compatibility
+
+Some Swagger 2.0 exports (including the Slack sample) contain JSON Schema-style
+type lists and schema lists under `items`. These are not valid Swagger 2.0 schema
+forms. For nonempty lists of recognized type names or object-valued item schemas
+at cataloged schema locations, the corresponding parser shape errors become
+`swagger-schema-compatibility` warnings. Original source definitions and pointers
+are preserved; input files are not rewritten. Schema branches in `items` lists
+are cataloged for provenance/reference resolution.
+
+A single non-null type plus `null` retains its concrete type and nullability.
+Multiple non-null types remain unknown as before. `items` lists are ambiguous:
+they are not automatically reinterpreted as unions, and extraction reports
+`unsupported-items-list` with potentially partial metadata. All unrelated parser
+errors, malformed list members, and missing internal references remain fatal.
