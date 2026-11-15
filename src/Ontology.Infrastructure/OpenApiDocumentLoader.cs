@@ -106,15 +106,39 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
             foreach (var (pointer, node) in nodes)
                 if (pointer.EndsWith("/schema", StringComparison.Ordinal)) Schema(node, pointer);
             var operations = new List<ApiOperation>();
+            void PathItem(JsonElement item, string route, string pointer, int depth)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (depth > 32)
+                {
+                    Report("callback-depth-limit", DiagnosticSeverity.Warning, "Callback traversal stopped at depth 32.", pointer);
+                    return;
+                }
+                if (operations.Count > 10_000) throw new InvalidOperationException("Operation catalog exceeds 10,000 entries.");
+                if (Resolve(item) is not { ValueKind: JsonValueKind.Object } pathItem) return;
+                foreach (var method in new[] { "get", "put", "post", "delete", "options", "head", "patch", "trace" })
+                {
+                    if (!pathItem.TryGetProperty(method, out var operation)) continue;
+                    var operationPointer = pointer + "/" + method;
+                    operations.Add(new(method.ToUpperInvariant(), route, new(inputPath, operationPointer), operation));
+                    if (!operation.TryGetProperty("callbacks", out var callbacks) || callbacks.ValueKind != JsonValueKind.Object) continue;
+                    foreach (var callback in callbacks.EnumerateObject())
+                        if (Resolve(callback.Value) is { ValueKind: JsonValueKind.Object } expressions)
+                            foreach (var expression in expressions.EnumerateObject())
+                            {
+                                if (expression.Name.StartsWith("x-", StringComparison.Ordinal)) continue;
+                                PathItem(expression.Value, expression.Name, operationPointer + "/callbacks/" + Escape(callback.Name) + "/" + Escape(expression.Name), depth + 1);
+                            }
+                }
+            }
             if (root.TryGetProperty("paths", out var paths) && paths.ValueKind == JsonValueKind.Object)
                 foreach (var path in paths.EnumerateObject())
                 {
-                    if (Resolve(path.Value) is not { ValueKind: JsonValueKind.Object } pathItem) continue;
-                    foreach (var method in new[] { "get", "put", "post", "delete", "options", "head", "patch", "trace" })
-                        if (pathItem.TryGetProperty(method, out var operation))
-                            operations.Add(new(method.ToUpperInvariant(), path.Name,
-                                new(inputPath, "/paths/" + Escape(path.Name) + "/" + method), operation));
+                    if (path.Name.StartsWith('/')) PathItem(path.Value, path.Name, "/paths/" + Escape(path.Name), 0);
                 }
+            if (root.TryGetProperty("webhooks", out var webhooks) && webhooks.ValueKind == JsonValueKind.Object)
+                foreach (var webhook in webhooks.EnumerateObject())
+                    PathItem(webhook.Value, webhook.Name, "/webhooks/" + Escape(webhook.Name), 0);
             var versionName = version == OpenApiSpecVersion.OpenApi2_0 ? "2.0" : version == OpenApiSpecVersion.OpenApi3_0 ? "3.0" : "3.1";
             return new(new ApiDocument(versionName, parsed.Document.Info?.Title ?? "", schemas.Values.OrderBy(s => s.Provenance.SourcePointer, StringComparer.Ordinal),
                 operations.OrderBy(o => o.Provenance.SourcePointer, StringComparer.Ordinal), references.OrderBy(r => r.Provenance.SourcePointer, StringComparer.Ordinal), root), diagnostics);

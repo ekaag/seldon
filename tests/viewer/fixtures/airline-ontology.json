@@ -1,0 +1,402 @@
+{
+  "schemaVersion": "1.0",
+  "ontology": {
+    "id": "airline-reservation-openapi",
+    "name": "Sample Airline Reservation API",
+    "entities": [
+      {
+        "id": "schema:/components/schemas/Booking",
+        "name": "Booking",
+        "properties": [
+          {
+            "name": "flight",
+            "dataType": "object",
+            "required": true,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Booking/properties/flight"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": "schema:/components/schemas/Flight",
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          },
+          {
+            "name": "flightId",
+            "dataType": "string",
+            "required": false,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Booking/properties/flightId"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          },
+          {
+            "name": "id",
+            "dataType": "string",
+            "required": true,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Booking/properties/id"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          },
+          {
+            "name": "passenger",
+            "dataType": "object",
+            "required": true,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Booking/properties/passenger"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": "schema:/components/schemas/Passenger",
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          },
+          {
+            "name": "passengers",
+            "dataType": "array",
+            "required": false,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Booking/properties/passengers"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": {
+              "name": "items",
+              "dataType": "object",
+              "required": false,
+              "description": null,
+              "provenance": {
+                "document": "samples/airline-reservation-openapi.yaml",
+                "sourcePointer": "/components/schemas/Booking/properties/passengers/items"
+              },
+              "format": null,
+              "nullable": false,
+              "referencedSchemaId": "schema:/components/schemas/Passenger",
+              "enumValues": [],
+              "items": null,
+              "properties": []
+            },
+            "properties": []
+          }
+        ],
+        "actionIds": [
+          "operation:createBooking",
+          "operation:listPassengerBookings"
+        ],
+        "description": null,
+        "provenance": {
+          "document": "samples/airline-reservation-openapi.yaml",
+          "sourcePointer": "/components/schemas/Booking"
+        }
+      },
+      {
+        "id": "schema:/components/schemas/Flight",
+        "name": "Flight",
+        "properties": [
+          {
+            "name": "destination",
+            "dataType": "string",
+            "required": false,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Flight/properties/destination"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          },
+          {
+            "name": "id",
+            "dataType": "string",
+            "required": false,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Flight/properties/id"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          }
+        ],
+        "actionIds": [],
+        "description": null,
+        "provenance": {
+          "document": "samples/airline-reservation-openapi.yaml",
+          "sourcePointer": "/components/schemas/Flight"
+        }
+      },
+      {
+        "id": "schema:/components/schemas/Passenger",
+        "name": "Passenger",
+        "properties": [
+          {
+            "name": "id",
+            "dataType": "string",
+            "required": false,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Passenger/properties/id"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "required": false,
+            "description": null,
+            "provenance": {
+              "document": "samples/airline-reservation-openapi.yaml",
+              "sourcePointer": "/components/schemas/Passenger/properties/name"
+            },
+            "format": null,
+            "nullable": false,
+            "referencedSchemaId": null,
+            "enumValues": [],
+            "items": null,
+            "properties": []
+          }
+        ],
+        "actionIds": [
+          "operation:listPassengerBookings"
+        ],
+        "description": null,
+        "provenance": {
+          "document": "samples/airline-reservation-openapi.yaml",
+          "sourcePointer": "/components/schemas/Passenger"
+        }
+      }
+    ],
+    "relationships": [
+      {
+        "id": "relationship:schema%3A%2Fcomponents%2Fschemas%2FBooking:%2Fproperties%2Fflight:schema%3A%2Fcomponents%2Fschemas%2FFlight:ExplicitSchemaRef",
+        "sourceEntityId": "schema:/components/schemas/Booking",
+        "targetEntityId": "schema:/components/schemas/Flight",
+        "name": "flight",
+        "cardinality": "one",
+        "evidenceKind": "ExplicitSchemaRef",
+        "sourcePointer": "/components/schemas/Booking/properties/flight/$ref",
+        "sourcePropertyName": "flight"
+      },
+      {
+        "id": "relationship:schema%3A%2Fcomponents%2Fschemas%2FBooking:%2Fproperties%2FflightId:schema%3A%2Fcomponents%2Fschemas%2FFlight:Heuristic",
+        "sourceEntityId": "schema:/components/schemas/Booking",
+        "targetEntityId": "schema:/components/schemas/Flight",
+        "name": "flightId",
+        "cardinality": "unknown",
+        "evidenceKind": "Heuristic",
+        "sourcePointer": "/components/schemas/Booking/properties/flightId",
+        "sourcePropertyName": "flightId"
+      },
+      {
+        "id": "relationship:schema%3A%2Fcomponents%2Fschemas%2FBooking:%2Fproperties%2Fpassenger:schema%3A%2Fcomponents%2Fschemas%2FPassenger:ExplicitSchemaRef",
+        "sourceEntityId": "schema:/components/schemas/Booking",
+        "targetEntityId": "schema:/components/schemas/Passenger",
+        "name": "passenger",
+        "cardinality": "one",
+        "evidenceKind": "ExplicitSchemaRef",
+        "sourcePointer": "/components/schemas/Booking/properties/passenger/$ref",
+        "sourcePropertyName": "passenger"
+      },
+      {
+        "id": "relationship:schema%3A%2Fcomponents%2Fschemas%2FBooking:%2Fproperties%2Fpassengers%2Fitems:schema%3A%2Fcomponents%2Fschemas%2FPassenger:ExplicitSchemaRef",
+        "sourceEntityId": "schema:/components/schemas/Booking",
+        "targetEntityId": "schema:/components/schemas/Passenger",
+        "name": "passengers",
+        "cardinality": "many",
+        "evidenceKind": "ExplicitSchemaRef",
+        "sourcePointer": "/components/schemas/Booking/properties/passengers/items/$ref",
+        "sourcePropertyName": "passengers"
+      }
+    ],
+    "actions": [
+      {
+        "id": "operation:createBooking",
+        "name": "createBooking",
+        "httpMethod": "POST",
+        "path": "/bookings",
+        "entityIds": [
+          "schema:/components/schemas/Booking"
+        ],
+        "responseSchemaIds": [
+          "schema:/components/schemas/Booking"
+        ],
+        "sourcePointer": "/paths/~1bookings/post",
+        "operationId": "createBooking",
+        "requestSchemaId": "schema:/components/schemas/Booking",
+        "summary": null,
+        "description": null,
+        "tags": [],
+        "parameters": [],
+        "requestSchemas": [
+          {
+            "schemaId": "schema:/components/schemas/Booking",
+            "mediaType": "application/json",
+            "sourcePointer": "/paths/~1bookings/post/requestBody/content/application~1json/schema"
+          }
+        ],
+        "responses": [
+          {
+            "statusCode": "201",
+            "description": "Booking created",
+            "schemas": [
+              {
+                "schemaId": "schema:/components/schemas/Booking",
+                "mediaType": "application/json",
+                "sourcePointer": "/paths/~1bookings/post/responses/201/content/application~1json/schema"
+              }
+            ],
+            "sourcePointer": "/paths/~1bookings/post/responses/201"
+          }
+        ],
+        "security": [],
+        "securityInherited": true,
+        "requestBodyRequired": true,
+        "associations": [
+          {
+            "entityId": "schema:/components/schemas/Booking",
+            "evidenceKind": "ExplicitSchemaRef",
+            "sourcePointer": "/paths/~1bookings/post/requestBody/content/application~1json/schema"
+          },
+          {
+            "entityId": "schema:/components/schemas/Booking",
+            "evidenceKind": "ExplicitSchemaRef",
+            "sourcePointer": "/paths/~1bookings/post/responses/201/content/application~1json/schema"
+          }
+        ]
+      },
+      {
+        "id": "operation:getHealth",
+        "name": "getHealth",
+        "httpMethod": "GET",
+        "path": "/health",
+        "entityIds": [],
+        "responseSchemaIds": [],
+        "sourcePointer": "/paths/~1health/get",
+        "operationId": "getHealth",
+        "requestSchemaId": null,
+        "summary": null,
+        "description": null,
+        "tags": [],
+        "parameters": [],
+        "requestSchemas": [],
+        "responses": [
+          {
+            "statusCode": "204",
+            "description": "Healthy",
+            "schemas": [],
+            "sourcePointer": "/paths/~1health/get/responses/204"
+          }
+        ],
+        "security": [],
+        "securityInherited": true,
+        "requestBodyRequired": false,
+        "associations": []
+      },
+      {
+        "id": "operation:listPassengerBookings",
+        "name": "listPassengerBookings",
+        "httpMethod": "GET",
+        "path": "/passengers/{passengerId}/bookings",
+        "entityIds": [
+          "schema:/components/schemas/Booking",
+          "schema:/components/schemas/Passenger"
+        ],
+        "responseSchemaIds": [
+          "schema:/paths/~1passengers~1{passengerId}~1bookings/get/responses/200/content/application~1json/schema"
+        ],
+        "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/get",
+        "operationId": "listPassengerBookings",
+        "requestSchemaId": null,
+        "summary": "List a passenger\u0027s bookings",
+        "description": null,
+        "tags": [],
+        "parameters": [
+          {
+            "name": "passengerId",
+            "location": "path",
+            "required": true,
+            "description": null,
+            "dataType": "string",
+            "schemaId": "schema:/paths/~1passengers~1{passengerId}~1bookings/parameters/0/schema",
+            "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/parameters/0",
+            "format": null
+          }
+        ],
+        "requestSchemas": [],
+        "responses": [
+          {
+            "statusCode": "200",
+            "description": "Related bookings",
+            "schemas": [
+              {
+                "schemaId": "schema:/paths/~1passengers~1{passengerId}~1bookings/get/responses/200/content/application~1json/schema",
+                "mediaType": "application/json",
+                "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/get/responses/200/content/application~1json/schema"
+              }
+            ],
+            "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/get/responses/200"
+          }
+        ],
+        "security": [],
+        "securityInherited": true,
+        "requestBodyRequired": false,
+        "associations": [
+          {
+            "entityId": "schema:/components/schemas/Booking",
+            "evidenceKind": "ExplicitSchemaRef",
+            "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/get/responses/200/content/application~1json/schema/items"
+          },
+          {
+            "entityId": "schema:/components/schemas/Passenger",
+            "evidenceKind": "ParameterHeuristic",
+            "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/get"
+          },
+          {
+            "entityId": "schema:/components/schemas/Passenger",
+            "evidenceKind": "RouteHeuristic",
+            "sourcePointer": "/paths/~1passengers~1{passengerId}~1bookings/get"
+          }
+        ]
+      }
+    ]
+  }
+}

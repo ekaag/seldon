@@ -1,0 +1,78 @@
+openapi: 3.0.3
+info:
+  title: Sample Airline Reservation API
+  version: '1.0'
+paths:
+  /passengers/{passengerId}/bookings:
+    parameters:
+      - name: passengerId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listPassengerBookings
+      summary: List a passenger's bookings
+      responses:
+        '200':
+          description: Related bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+  /bookings:
+    post:
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '204':
+          description: Healthy
+components:
+  schemas:
+    Passenger:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Flight:
+      type: object
+      properties:
+        id:
+          type: string
+        destination:
+          type: string
+    Booking:
+      type: object
+      required: [id, passenger, flight]
+      properties:
+        id:
+          type: string
+        passenger:
+          $ref: '#/components/schemas/Passenger'
+        flight:
+          $ref: '#/components/schemas/Flight'
+        passengers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Passenger'
+        flightId:
+          type: string

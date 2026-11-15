@@ -24,6 +24,9 @@ errors propagate. Streams remain open. The maximum JSON nesting depth is 64.
 Request/response schema IDs need not identify entities: primitive schemas are valid.
 Build diagnostics remain in `OntologyBuildResult` and are intended for the separate
 `diagnostics.json` output; `IOntologySerializer` transports an ontology only.
-Action parameters/security metadata and richer schema metadata will extend the
-contracts and DTOs in their respective extraction slices. No OpenAPI loading,
-CLI export command, or viewer is implemented in this slice.
+Slice 1.5 adds optional property format, nullable, reference ID, enum values,
+array items, and nested properties; see `entity-extraction.md`.
+Slice 1.7 adds optional action summary, description, tags, parameters, request schemas,
+responses, security, inheritance/required flags, and association evidence. See
+`action-extraction.md` for semantics and limitations. CLI export and the viewer
+remain for later slices.

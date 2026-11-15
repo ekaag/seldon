@@ -18,7 +18,9 @@ public sealed class InMemoryOntology : IOntology
         Relationships = Snapshot(relationships, r => (IRelationshipType)new RelationshipType(r.Id, r.SourceEntityId,
             r.TargetEntityId, r.Name, r.Cardinality, r.EvidenceKind, r.SourcePointer, r.SourcePropertyName));
         Actions = Snapshot(actions, a => (IActionDefinition)new ActionDefinition(a.Id, a.Name, a.HttpMethod,
-            a.Path, a.EntityIds, a.ResponseSchemaIds, a.SourcePointer, a.OperationId, a.RequestSchemaId));
+            a.Path, a.EntityIds, a.ResponseSchemaIds, a.SourcePointer, a.OperationId, a.RequestSchemaId,
+            a.Summary, a.Description, a.Tags, a.Parameters, a.RequestSchemas, a.Responses, a.Security,
+            a.SecurityInherited, a.RequestBodyRequired, a.Associations));
         entitiesById = Index(Entities, e => e.Id);
         Index(Relationships, r => r.Id);
         var actionsById = Index(Actions, a => a.Id);
@@ -35,8 +37,13 @@ public sealed class InMemoryOntology : IOntology
             foreach (var actionId in entity.ActionIds)
                 Require(actionsById.ContainsKey(actionId), $"Entity '{entity.Id}' references unknown action '{actionId}'.");
         foreach (var action in Actions)
+        {
             foreach (var entityId in action.EntityIds)
                 Require(entitiesById.ContainsKey(entityId), $"Action '{action.Id}' references unknown entity '{entityId}'.");
+            foreach (var association in action.Associations)
+                Require(action.EntityIds.Contains(association.EntityId, StringComparer.Ordinal),
+                    $"Action '{action.Id}' has association evidence for unbound entity '{association.EntityId}'.");
+        }
     }
 
     public string Id { get; }

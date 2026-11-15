@@ -9,7 +9,7 @@ public sealed class EntityType : IEntityType
         Name = ModelCollections.Text(name, nameof(name));
         // Snapshot interface implementations as well as the containing collection.
         Properties = ModelCollections.Copy(ModelCollections.Copy(properties, nameof(properties))
-            .Select(p => (IPropertyDefinition)new PropertyDefinition(p.Name, p.DataType, p.Required, p.Description, p.Provenance)), nameof(properties));
+            .Select(PropertyDefinition.Snapshot), nameof(properties));
         if (Properties.Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != Properties.Count)
             throw new ArgumentException("Entity contains duplicate property names.", nameof(properties));
         ActionIds = ModelCollections.Ids(actionIds, nameof(actionIds));

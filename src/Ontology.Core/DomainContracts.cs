@@ -28,6 +28,12 @@ public interface IPropertyDefinition
     bool Required { get; }
     string? Description { get; }
     SourceProvenance? Provenance { get; }
+    string? Format => null;
+    bool Nullable => false;
+    string? ReferencedSchemaId => null;
+    IReadOnlyCollection<System.Text.Json.JsonElement> EnumValues => Array.Empty<System.Text.Json.JsonElement>();
+    IPropertyDefinition? Items => null;
+    IReadOnlyCollection<IPropertyDefinition> Properties => Array.Empty<IPropertyDefinition>();
 }
 
 public interface IRelationshipType
@@ -53,4 +59,14 @@ public interface IActionDefinition
     string? RequestSchemaId { get; }
     IReadOnlyCollection<string> ResponseSchemaIds { get; }
     string SourcePointer { get; }
+    string? Summary => null;
+    string? Description => null;
+    IReadOnlyCollection<string> Tags => Array.Empty<string>();
+    IReadOnlyCollection<ActionParameter> Parameters => Array.Empty<ActionParameter>();
+    IReadOnlyCollection<ActionSchemaBinding> RequestSchemas => Array.Empty<ActionSchemaBinding>();
+    IReadOnlyCollection<ActionResponse> Responses => Array.Empty<ActionResponse>();
+    IReadOnlyCollection<System.Text.Json.JsonElement> Security => Array.Empty<System.Text.Json.JsonElement>();
+    bool SecurityInherited => false;
+    bool RequestBodyRequired => false;
+    IReadOnlyCollection<ActionEntityAssociation> Associations => Array.Empty<ActionEntityAssociation>();
 }

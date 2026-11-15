@@ -1,5 +1,11 @@
 namespace Ontology.Core;
 
+public interface IOntologyFactory
+{
+    IOntology Create(string id, string name, IEnumerable<IEntityType> entities,
+        IEnumerable<IRelationshipType> relationships, IEnumerable<IActionDefinition> actions);
+}
+
 public interface IOntologyBuilder
 {
     Task<OntologyBuildResult> BuildAsync(string inputPath, CancellationToken ct);

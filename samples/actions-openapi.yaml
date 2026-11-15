@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: Action Sample
+  version: '1.0'
+security:
+  - apiKey: []
+paths:
+  /customers/{customerId}/records:
+    parameters:
+      - name: customerId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+    get:
+      operationId: listRecords
+      summary: List related records
+      description: Read operation metadata
+      tags: [records, customers]
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: X-Trace
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+  /records:
+    post:
+      operationId: createRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Record'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '400':
+          description: Invalid
+  /customers/{customerId}/archive:
+    parameters:
+      - name: customerId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      responses:
+        '204':
+          description: Archived
+  /health:
+    get:
+      security: []
+      responses:
+        '204':
+          description: Healthy
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+    Record:
+      type: object
+      properties:
+        id:
+          type: string

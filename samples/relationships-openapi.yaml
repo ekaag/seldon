@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: Relationship Sample
+  version: '1.0'
+paths: {}
+components:
+  schemas:
+    Base:
+      type: object
+      properties:
+        id:
+          type: string
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+    Record:
+      allOf:
+        - $ref: '#/components/schemas/Base'
+        - $ref: '#/components/schemas/Base'
+        - type: object
+          properties:
+            owner:
+              $ref: '#/components/schemas/Customer'
+            reviewer:
+              $ref: '#/components/schemas/Customer'
+            customers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Customer'
+            customerId:
+              type: string
+            detail:
+              type: object
+              properties:
+                approvedBy:
+                  $ref: '#/components/schemas/Customer'

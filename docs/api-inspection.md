@@ -36,7 +36,7 @@ YAML aliases are explicitly unsupported; use internal `$ref` instead. Files endi
 in `.json` use JSON parsing; other extensions use YAML parsing. JSON pointers refer
 to the original source structure, not YAML line numbers. Specification versions are
 reported as families (2.0, 3.0, 3.1). Parser diagnostics do not constitute exhaustive
-OpenAPI conformance validation. Webhook/callback operation catalogs are deferred.
+OpenAPI conformance validation. Slice 1.7 adds webhook/callback operation catalogs.
 Microsoft's parser validates Swagger definition names using its normalized component
 rules, so names containing `/` or `~` can produce parser errors even though the
 source reference catalog correctly resolves their escaped JSON Pointers.
