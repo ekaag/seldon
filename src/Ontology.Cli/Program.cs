@@ -8,7 +8,7 @@ var arguments = CliArguments.Parse(args);
 if (arguments is null)
 {
     Console.Error.WriteLine("Usage: ontology-builder inspect --input <OpenAPI/Swagger YAML or JSON file>");
-    Console.Error.WriteLine("       ontology-builder build --input <file> --output <directory>");
+    Console.Error.WriteLine("       ontology-builder build --input <file> --output <directory> [--no-open]");
     return 2;
 }
 using var services = new ServiceCollection()
@@ -47,6 +47,7 @@ try
         Console.WriteLine($"Exported {Path.Combine(output, "ontology.json")}");
         Console.WriteLine($"Viewer: {Path.Combine(output, "index.html")} (choose Load ontology.json)");
         Console.WriteLine($"Entities: {built.Ontology.Entities.Count}; relationships: {built.Ontology.Relationships.Count}; actions: {built.Ontology.Actions.Count}");
+        if (arguments.OpenBrowser) ChromeViewerLauncher.Open(Path.Combine(output, "index.html"));
         return 0;
     }
     var result = await services.GetRequiredService<IApiDocumentLoader>().LoadAsync(arguments.Input, cancellation.Token);

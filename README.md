@@ -21,6 +21,15 @@ entities, properties, relationships, and associated/unbound actions. Inspect the
 JSON in your editor, or open the output folder's `index.html` and choose **Load ontology.json**.
 See [viewer instructions](docs/viewer.md). No server is required.
 
+After a successful build, the CLI opens the exported `index.html` in Google Chrome.
+Choose **Load ontology.json** to select the JSON beside it. If Chrome is unavailable,
+the CLI prints a warning and retains the successful export. Use `--no-open` for
+automated/headless runs:
+
+```powershell
+dotnet run --project src/Ontology.Cli -- build --input samples/actions-openapi.yaml --output out/actions --no-open
+```
+
 OpenAPI 3.0/3.1 and Swagger 2.0 are accepted in YAML or JSON. You can inspect counts
 without exporting:
 

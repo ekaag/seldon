@@ -35,6 +35,8 @@ public sealed class CliBuildTests : IDisposable
         };
         start.ArgumentList.Add(dll);
         foreach (var argument in args) start.ArgumentList.Add(argument);
+        // Exercise exports without opening browser windows in the test runner.
+        if (args.FirstOrDefault() == "build" && !args.Contains("--no-open")) start.ArgumentList.Add("--no-open");
         using var process = Process.Start(start)!;
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
