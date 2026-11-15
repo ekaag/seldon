@@ -38,6 +38,13 @@ internal static class ExportFiles
                 {
                     var temporary = Path.Combine(directory, ".viewer-" + token + "-" + name + ".tmp");
                     viewerTemps.Add(name, temporary);
+                    if (name == "index.html" && result.Diagnostics.Any(d => d.Code == "partial-import-enabled"))
+                    {
+                        var html = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "viewer", name), ct);
+                        html = html.Replace("<main>", "<main>\n    <p class=\"legend\" role=\"note\">Partial import: this bundle may omit operations or schema details. Review diagnostics.json before using its metadata.</p>", StringComparison.Ordinal);
+                        await File.WriteAllTextAsync(temporary, html, ct);
+                        continue;
+                    }
                     await using var source = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "viewer", name));
                     await using var destination = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 8192, true);
                     await source.CopyToAsync(destination, ct);

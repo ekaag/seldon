@@ -121,6 +121,7 @@ public sealed class CliBuildTests : IDisposable
     [InlineData("build --input x --input y --output z")]
     [InlineData("inspect --input x --output z")]
     [InlineData("build --input x --output y --extra z")]
+    [InlineData("inspect --input x --allow-partial --allow-partial")]
     public async Task InvalidArgumentsHaveUsageExitCode(string arguments)
     {
         var result = await Run(arguments.Split(' '));
@@ -156,6 +157,31 @@ public sealed class CliBuildTests : IDisposable
         var result = await Run("inspect", "--input", Sample("minimal-openapi.yaml"));
         Assert.Equal(0, result.Code);
         Assert.Contains("Operations: 1", result.Output);
+    }
+
+    [Fact]
+    public async Task PartialModeWorksForInspectAndBuildWhileDefaultRemainsStrict()
+    {
+        var input = Sample("partial-openapi.json");
+        var original = await File.ReadAllBytesAsync(input);
+        Assert.Equal(1, (await Run("inspect", "--input", input)).Code);
+        var inspected = await Run("inspect", "--input", input, "--allow-partial");
+        Assert.Equal(0, inspected.Code);
+        Assert.Contains("Operations: 1", inspected.Output);
+        Assert.Contains("partial-import-enabled", inspected.Error);
+        var built = await Run("build", "--input", input, "--output", directory, "--allow-partial");
+        Assert.Equal(0, built.Code);
+        Assert.Contains("Partial import: this bundle", await File.ReadAllTextAsync(Path.Combine(directory, "index.html")));
+        await using var stream = File.OpenRead(Path.Combine(directory, "ontology.json"));
+        var ontology = await new JsonOntologySerializer().ReadAsync(stream, default);
+        Assert.Equal("listItems", Assert.Single(ontology.Actions).OperationId);
+        var item = Assert.Single(ontology.Entities);
+        Assert.Equal("unknown", item.Properties.Single(p => p.Name == "details").DataType);
+        Assert.Null(item.Properties.Single(p => p.Name == "details").ReferencedSchemaId);
+        Assert.Empty(ontology.Relationships);
+        using var diagnostics = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(directory, "diagnostics.json")));
+        Assert.Contains(diagnostics.RootElement.EnumerateArray(), d => d.GetProperty("code").GetString() == "partial-unresolved-schema");
+        Assert.Equal(original, await File.ReadAllBytesAsync(input));
     }
 
     [Fact]

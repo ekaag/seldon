@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using System.Text.Json;
 using Ontology.Core;
 using Ontology.Infrastructure;
 
@@ -136,6 +137,42 @@ public sealed class OpenApiDocumentLoaderTests
         var result = await LoadText(json);
         Assert.True(result.HasErrors);
         Assert.Contains(result.Diagnostics, d => d.Message.Contains("Missing"));
+    }
+
+    [Fact]
+    public async Task PartialImportPreservesMissingSchemasAndOmitsMalformedSecurityOperations()
+    {
+        var strict = await loader.LoadAsync(Sample("partial-openapi.json"), default);
+        Assert.True(strict.HasErrors);
+        var partial = await new OpenApiDocumentLoader(new(AllowPartial: true)).LoadAsync(Sample("partial-openapi.json"), default);
+        Assert.False(partial.HasErrors, string.Join("; ", partial.Diagnostics.Select(d => d.Message)));
+        var document = Assert.IsType<ApiDocument>(partial.Document);
+        Assert.Equal("listItems", Assert.Single(document.Operations).Definition.GetProperty("operationId").GetString());
+        Assert.Contains(partial.Diagnostics, d => d.Code == "partial-import-enabled");
+        Assert.Contains(partial.Diagnostics, d => d.Code == "partial-parser-metadata");
+        Assert.Contains(partial.Diagnostics, d => d.Code == "partial-operation-skipped" && d.Provenance!.SourcePointer == "/paths/~1revocations/post");
+        Assert.Contains(partial.Diagnostics, d => d.Code == "partial-unresolved-schema");
+        Assert.Null(document.References.Single(r => r.Value.EndsWith("MissingDetails", StringComparison.Ordinal)).TargetPointer);
+        Assert.Null(document.ResolveReference("#/components/schemas/MissingDetails"));
+        Assert.Equal(JsonValueKind.Null, document.Root.GetProperty("paths").GetProperty("/revocations").GetProperty("post").GetProperty("security")[0].GetProperty("bearerAuth").ValueKind);
+        Assert.True(document.Root.GetProperty("info").TryGetProperty("externalDocs", out _));
+    }
+
+    [Theory]
+    [InlineData("{", "document-load-failed")]
+    [InlineData("{\"openapi\":\"9.0.0\",\"info\":{\"title\":\"X\",\"version\":\"1\"},\"paths\":{}}", "document-load-failed")]
+    [InlineData("{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"X\",\"version\":\"1\"},\"paths\":{\"/items\":{\"$ref\":\"#/components/pathItems/Missing\"}}}", "unresolved-reference")]
+    public async Task PartialImportDoesNotIgnoreStructuralFailures(string text, string code)
+    {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+        try
+        {
+            await File.WriteAllTextAsync(path, text);
+            var result = await new OpenApiDocumentLoader(new(AllowPartial: true)).LoadAsync(path, default);
+            Assert.True(result.HasErrors);
+            Assert.Contains(result.Diagnostics, d => d.Code == code && d.Severity == DiagnosticSeverity.Error);
+        }
+        finally { File.Delete(path); }
     }
 
     [Theory]

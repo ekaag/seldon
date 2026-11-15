@@ -59,3 +59,37 @@ Multiple non-null types remain unknown as before. `items` lists are ambiguous:
 they are not automatically reinterpreted as unions, and extraction reports
 `unsupported-items-list` with potentially partial metadata. All unrelated parser
 errors, malformed list members, and missing internal references remain fatal.
+
+## Explicit partial import
+
+`inspect` and `build` accept `--allow-partial`. Without this flag, the default
+strict behavior above is unchanged. With it:
+
+- Missing internal references at cataloged **schema** locations produce
+  `partial-unresolved-schema` warnings and retain null resolution targets. No
+  replacement types or relationships are invented; affected property types may
+  remain unknown. Missing references to other structures are still errors.
+- The misplaced `info.externalDocs` property and parser list-shape errors in
+  security requirements produce `partial-parser-metadata` warnings. The original
+  syntax is retained; this is not a source-file repair.
+- Operations whose effective security (operation override or root inheritance)
+  is not an array of objects with string-array scopes are omitted from the
+  operation catalog with `partial-operation-skipped`. Security is not normalized
+  to empty scopes, anonymous access, or guessed requirements. Other valid operations
+  can still be exported.
+- `partial-import-enabled` is always included in diagnostics. Successful bundles
+  display a partial-import notice in `index.html`; diagnostics travel separately
+  in `diagnostics.json`. A standalone `ontology.json` does not embed those diagnostics.
+
+Malformed JSON/YAML, size/depth limits, unsupported specification versions, unrelated
+parser errors, and missing non-schema reference targets still fail. No external
+documents are fetched. Exit 0 means a partial inspection/export succeeded, not that
+the source specification passed complete validation. Warnings are written to stderr;
+PowerShell may format them as native-command error records even when `$LASTEXITCODE`
+is 0.
+
+The synthetic `samples/partial-openapi.json` fixture exercises these cases without
+depending on an external API file. Square's supplied input exposed the same three
+issues: misplaced `externalDocs`, null OAuth scopes, and absent `AppFeeAllocation`
+and `CurrencyExchange` definitions. See the [OpenAPI 3.0 specification](https://spec.openapis.org/oas/v3.0.0.html)
+for the Info Object and Security Requirement Object formats.

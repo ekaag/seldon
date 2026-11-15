@@ -6,7 +6,7 @@ using Ontology.Core;
 
 namespace Ontology.Infrastructure;
 
-public sealed class OpenApiDocumentLoader : IApiDocumentLoader
+public sealed class OpenApiDocumentLoader(ApiDocumentLoadOptions? options = null) : IApiDocumentLoader
 {
     public const int MaximumInputBytes = 16 * 1024 * 1024;
 
@@ -15,8 +15,12 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
         ct.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrWhiteSpace(inputPath);
         var diagnostics = new List<OntologyDiagnostic>();
+        var allowPartial = options?.AllowPartial == true;
         void Report(string code, DiagnosticSeverity severity, string message, string pointer = "") =>
             diagnostics.Add(new(code, severity, message, new(inputPath, pointer)));
+        if (allowPartial)
+            Report("partial-import-enabled", DiagnosticSeverity.Warning,
+                "Partial import is enabled: unresolved schemas and selected metadata errors may be retained with warnings. Exported metadata is not a validated complete API contract.");
         try
         {
             // Never use the parser's URL overload or load external documents.
@@ -37,6 +41,9 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
             using var json = await ApiSourceJson.ReadAsync(input, Path.GetExtension(inputPath).Equals(".json", StringComparison.OrdinalIgnoreCase) ? "json" : "yaml", ct);
             if (json.RootElement.ValueKind != JsonValueKind.Object)
                 throw new JsonException("The API document root must be an object.");
+            var root = json.RootElement;
+            var nodes = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+            Index(root, "", nodes, ct);
             input.Position = 0;
             var settings = new OpenApiReaderSettings { LoadExternalRefs = false, LeaveStreamOpen = true };
             settings.AddYamlReader();
@@ -48,6 +55,13 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                 foreach (var error in diagnostic.Errors)
                 {
                     var pointer = error.Pointer ?? "";
+                    var normalizedPointer = pointer.StartsWith('#') ? pointer[1..] : pointer;
+                    var partialMetadata = allowPartial &&
+                        (error.Message == "externalDocs is not a valid property at #/info" &&
+                            root.TryGetProperty("info", out var info) && info.ValueKind == JsonValueKind.Object && info.TryGetProperty("externalDocs", out _) ||
+                        normalizedPointer.EndsWith("/security", StringComparison.Ordinal) &&
+                            error.Message.StartsWith("Expected list while parsing", StringComparison.Ordinal) &&
+                            nodes.TryGetValue(normalizedPointer, out var invalidSecurity) && !ValidSecurity(invalidSecurity));
                     var compatibility = false;
                     if (parsed.Diagnostic.SpecificationVersion == OpenApiSpecVersion.OpenApi2_0 && catalog is not null)
                     {
@@ -63,7 +77,10 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                                     value.EnumerateArray().All(x => x.ValueKind == JsonValueKind.Object);
                         }
                     }
-                    if (compatibility)
+                    if (partialMetadata)
+                        Report("partial-parser-metadata", DiagnosticSeverity.Warning,
+                            error.Message + ". Preserved from source in partial import; operations with invalid security are omitted.", pointer);
+                    else if (compatibility)
                         Report("swagger-schema-compatibility", DiagnosticSeverity.Warning,
                             "Nonstandard Swagger 2.0 schema preserved from source: " + error.Message +
                             ". Extraction may be partial; schema lists under items are not assumed to be unions.", pointer);
@@ -81,10 +98,8 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                 Report("unsupported-version", DiagnosticSeverity.Error, $"Unsupported specification version '{version}'. Expected Swagger 2.0 or OpenAPI 3.0/3.1.");
                 return new(null, diagnostics);
             }
-            var root = json.RootElement;
-            var nodes = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-            Index(root, "", nodes, ct);
             var references = new List<ApiReference>();
+            var missingReferences = new List<(string Pointer, string Value)>();
             foreach (var (pointer, node) in nodes)
             {
                 if (node.ValueKind != JsonValueKind.Object || !node.TryGetProperty("$ref", out var reference)) continue;
@@ -94,7 +109,7 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                     Report("external-reference-unsupported", DiagnosticSeverity.Warning, $"Reference '{value}' is not a supported internal JSON Pointer; it was not loaded.", pointer + "/$ref");
                 else if (!nodes.ContainsKey(target))
                 {
-                    Report("unresolved-reference", DiagnosticSeverity.Error, $"Internal reference '{value}' does not exist.", pointer + "/$ref");
+                    missingReferences.Add((pointer, value));
                     target = null;
                 }
                 references.Add(new(value, new(inputPath, pointer + "/$ref"), target));
@@ -136,6 +151,13 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                 foreach (var entry in named.EnumerateObject()) Schema(entry.Value, schemaRoot + "/" + Escape(entry.Name), entry.Name);
             foreach (var (pointer, node) in nodes)
                 if (pointer.EndsWith("/schema", StringComparison.Ordinal)) Schema(node, pointer);
+            foreach (var missing in missingReferences)
+            {
+                var partialSchema = allowPartial && schemas.ContainsKey(missing.Pointer);
+                Report(partialSchema ? "partial-unresolved-schema" : "unresolved-reference",
+                    partialSchema ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
+                    $"Internal reference '{missing.Value}' does not exist." + (partialSchema ? " Kept unresolved; no definition or relationship was invented." : ""), missing.Pointer + "/$ref");
+            }
             ParserDiagnostics(schemas);
             var operations = new List<ApiOperation>();
             void PathItem(JsonElement item, string route, string pointer, int depth)
@@ -152,7 +174,12 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
                 {
                     if (!pathItem.TryGetProperty(method, out var operation)) continue;
                     var operationPointer = pointer + "/" + method;
-                    operations.Add(new(method.ToUpperInvariant(), route, new(inputPath, operationPointer), operation));
+                    var hasSecurity = operation.TryGetProperty("security", out var security) || root.TryGetProperty("security", out security);
+                    if (allowPartial && hasSecurity && !ValidSecurity(security))
+                        Report("partial-operation-skipped", DiagnosticSeverity.Warning,
+                            "Operation omitted because its effective security metadata is malformed; no authentication requirements were guessed.", operationPointer);
+                    else
+                        operations.Add(new(method.ToUpperInvariant(), route, new(inputPath, operationPointer), operation));
                     if (!operation.TryGetProperty("callbacks", out var callbacks) || callbacks.ValueKind != JsonValueKind.Object) continue;
                     foreach (var callback in callbacks.EnumerateObject())
                         if (Resolve(callback.Value) is { ValueKind: JsonValueKind.Object } expressions)
@@ -183,6 +210,10 @@ public sealed class OpenApiDocumentLoader : IApiDocumentLoader
     }
 
     private static string Escape(string value) => value.Replace("~", "~0").Replace("/", "~1");
+    private static bool ValidSecurity(JsonElement security) => security.ValueKind == JsonValueKind.Array &&
+        security.EnumerateArray().All(requirement => requirement.ValueKind == JsonValueKind.Object &&
+            requirement.EnumerateObject().All(scheme => scheme.Value.ValueKind == JsonValueKind.Array &&
+                scheme.Value.EnumerateArray().All(scope => scope.ValueKind == JsonValueKind.String)));
     private static string? LocalPointer(string value) => value == "#" ? "" :
         value.StartsWith("#/", StringComparison.Ordinal) ? Uri.UnescapeDataString(value[1..]) : null;
 

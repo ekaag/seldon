@@ -2,6 +2,8 @@ using System.Text.Json;
 
 namespace Ontology.Core;
 
+public sealed record ApiDocumentLoadOptions(bool AllowPartial = false);
+
 public interface IApiDocumentLoader
 {
     Task<ApiDocumentLoadResult> LoadAsync(string inputPath, CancellationToken ct);

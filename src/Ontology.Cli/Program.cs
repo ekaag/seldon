@@ -7,12 +7,12 @@ using Ontology.Infrastructure;
 var arguments = CliArguments.Parse(args);
 if (arguments is null)
 {
-    Console.Error.WriteLine("Usage: ontology-builder inspect --input <OpenAPI/Swagger YAML or JSON file>");
-    Console.Error.WriteLine("       ontology-builder build --input <file> --output <directory> [--no-open]");
+    Console.Error.WriteLine("Usage: ontology-builder inspect --input <OpenAPI/Swagger YAML or JSON file> [--allow-partial]");
+    Console.Error.WriteLine("       ontology-builder build --input <file> --output <directory> [--no-open] [--allow-partial]");
     return 2;
 }
 using var services = new ServiceCollection()
-    .AddSingleton<IApiDocumentLoader, OpenApiDocumentLoader>()
+    .AddSingleton<IApiDocumentLoader>(_ => new OpenApiDocumentLoader(new(arguments.AllowPartial)))
     .AddSingleton<IEntityExtractor, EntityExtractor>()
     .AddSingleton<IRelationshipExtractor, RelationshipExtractor>()
     .AddSingleton<IActionExtractor, ActionExtractor>()

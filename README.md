@@ -57,6 +57,22 @@ A failed build retains any previous `ontology.json`; check the exit code and cur
 diagnostics before using an existing output. Invalid arguments/input-output collisions
 are rejected before exporting. Output I/O failures are reported on stderr.
 
+For incomplete specifications, opt into a partial inspection/export explicitly:
+
+```powershell
+dotnet run --project src/Ontology.Cli -- build --input "C:\code\ekaag\api-spec-inputs\square-api.json" --output "out/square-partial" --allow-partial
+dotnet run --project src/Ontology.Cli -- inspect --input "samples/partial-openapi.json" --allow-partial
+```
+
+Strict validation remains the default. Partial mode retains missing schema references
+as unresolved warnings, tolerates selected metadata errors, and omits operations with
+malformed effective security requirements. It never invents missing definitions or
+guesses authentication. The exported viewer displays a partial-import notice; review
+the accompanying `diagnostics.json` before using the metadata. Syntax errors,
+unsupported versions, missing non-schema reference targets, and unrelated parser errors
+remain fatal. Input files are not rewritten. This mode is for exploration, not a claim
+that the source is a complete, validated API contract. See [parser limits](docs/api-inspection.md).
+
 All six files are staged under unique temporary filenames in the destination directory
 and renamed only after generation succeeds. Each rename replaces one complete file;
 the bundle is not a single transaction, so interruption or an I/O error between renames

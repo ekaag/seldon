@@ -49,6 +49,18 @@ Reference: specification sections 7, 9 (Increment 1), 12, and 14 (First task).
 
 ## Iteration history
 
+### 2026-11-14 — Square import and explicit partial mode
+
+- Investigated the supplied external Square input and saved errors. Confirmed misplaced `info.externalDocs`, null OAuth security scopes, and absent `AppFeeAllocation`/`CurrencyExchange` schema definitions.
+- User selected explicit `--allow-partial` while retaining strict validation by default (D-007).
+- Added `ApiDocumentLoadOptions`, CLI flag parsing and composition, targeted metadata compatibility, unresolved-schema warnings, and omission of malformed-security operations. Source files remain untouched; no replacement schema or authentication assumptions are created.
+- Added a visible partial-import notice to generated viewers and documented semantics/limits in README and `docs/api-inspection.md`.
+- Added `samples/partial-openapi.json` and regression coverage for strict rejection, partial inspection/build, input preservation, unknown property types, no invented relationships, skipped malformed-security actions, viewer notice, invalid flags, and structural failures remaining fatal.
+- `dotnet test tests/Ontology.Tests --no-restore`: 134 passed, 0 failed. Build is included in the test command.
+- Final actual Square partial export succeeded (exit 0) at `out/square-partial`: 1,276 entities, 2,197 relationships, 331 actions; 887 warnings, no errors. Verified the viewer contains the partial-import notice. The revoke operation is omitted due to invalid security.
+- Actual Square `inspect` without the flag still returns exit 1 with seven fatal diagnostics, as intended. `git diff --check` found no whitespace errors. The externally located input was read only; the generated output is inside the workspace.
+- Follow-up: `out/myapi/diagnostics.json` still contained the earlier strict-mode errors. Rebuilt the Square input into `out/myapi` with `--allow-partial --no-open`: exit 0, no errors, 887 warnings, partial-mode marker present; exported counts unchanged (1,276 entities, 2,197 relationships, 331 actions).
+
 ### 2026-11-14 — Slack Swagger compatibility fix
 
 - Investigated `out/error.txt`: Swagger 2.0 parser rejects type arrays and schema arrays under `items` in the supplied Slack specification.

@@ -1,0 +1,27 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Partial catalog fixture",
+    "version": "1",
+    "externalDocs": {"url": "https://example.invalid/docs"}
+  },
+  "security": [{"bearerAuth": []}],
+  "paths": {
+    "/items": {"get": {
+      "operationId": "listItems",
+      "responses": {"200": {"description": "Items", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Item"}}}}}
+    }},
+    "/revocations": {"post": {
+      "operationId": "revoke",
+      "security": [{"bearerAuth": null}],
+      "responses": {"200": {"description": "OK"}}
+    }}
+  },
+  "components": {
+    "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}},
+    "schemas": {"Item": {"type": "object", "properties": {
+      "id": {"type": "string"},
+      "details": {"$ref": "#/components/schemas/MissingDetails"}
+    }}}
+  }
+}

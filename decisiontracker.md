@@ -14,8 +14,18 @@ Last updated: 2026-11-14
 | D-004 | 2026-11-13 | Validate model proposals and verify consequential action outcomes | Accepted | Specification sections 2, 10, and 12 |
 | D-005 | 2026-11-13 | Maintain persistent progress and decision logs | Accepted | User instruction, 2026-11-13 |
 | D-006 | 2026-11-14 | Preserve known nonstandard Swagger schema forms with explicit compatibility warnings | Accepted | Slack import failure and implementation judgment |
+| D-007 | 2026-11-14 | Opt-in partial inspection/export with unresolved schemas and omitted malformed-security operations | Accepted | User selected explicit partial mode after Square import failure |
 
 ## Decisions
+
+### D-007 — Explicit partial import for incomplete API specifications
+
+- **Date/status:** 2026-11-14, Accepted.
+- **Authority:** User selected `--allow-partial` for inspection and graph export; strict validation remains the default.
+- **Context:** The supplied Square file has misplaced `info.externalDocs`, null OAuth scopes, and missing `AppFeeAllocation` and `CurrencyExchange` schema definitions. These are input defects, not evidence that replacement definitions can be inferred safely.
+- **Decision:** Add a parser-neutral load option, wired from CLI `--allow-partial` for both commands. Tolerate missing schema references and the selected metadata errors as explicit warnings. Preserve raw syntax and provenance. Omit operations with malformed effective security requirements, including inherited requirements; do not guess authentication. Keep syntax/structural failures and missing non-schema references fatal.
+- **Consequences:** Exports can be useful but incomplete. The viewer identifies partial mode; companion diagnostics carry details. Standalone ontology JSON does not embed load diagnostics. No source repair, automatic external fetch, or fabricated schema occurs. Existing strict callers need no changes.
+- **Verification:** Synthetic parser and CLI regressions plus export of the actual Square file; results in `progress-tracking.md`.
 
 ### D-006 — Narrow compatibility for legacy Swagger schemas
 
